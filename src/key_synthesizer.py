@@ -6,12 +6,12 @@ from blade import Blade
 from grain import Grain
 
 class KeySynthesizer:
-    def __init__(self, sampling_freq:int, freq:float):
+    def __init__(self, sampling_freq:int, freq:float, positions:list):
         self.sampling_freq = sampling_freq
         self.freq = freq
         self.period = sampling_freq / freq
         self.is_active = False
-        self.blade = Blade(sampling_freq, Grain(sampling_freq, 50))
+        self.blade = Blade(sampling_freq, Grain(sampling_freq, 10), positions)
         self.last_blade_idx = -self.period
         self.bufor = np.zeros(0)
 
@@ -24,7 +24,7 @@ class KeySynthesizer:
 
     def get_chunk(self, chunk_size:int) -> np.array:
         if self.is_active:
-            while self.last_blade_idx + self.period < chunk_size:
+            while (self.last_blade_idx + self.period < chunk_size) or (self.bufor.size < chunk_size):
                 next_blade_start = int(self.last_blade_idx + self.period)
                 next_blade = self.blade.get_vector()
                 self.bufor = np.concatenate([
@@ -41,6 +41,7 @@ class KeySynthesizer:
                 self.bufor,
                 np.zeros(chunk_size - self.bufor.size)
             ])
-        output = self.bufor[:chunk_size]
+        volume = np.power(self.period / self.sampling_freq * 10, 1/2.8)
+        output = volume * self.bufor[:chunk_size]
         self.bufor = self.bufor[chunk_size:]
         return output

@@ -52,7 +52,7 @@ if ports:
 
     fs = 44100  # sampling rate, Hz, must be integer
     chunk = 128  # in samples
-    volume = 0.1
+    volume = 0.04
 
     synthesizer = Synthesizer(fs)
     stream = sd.OutputStream(fs, chunk, channels=1)

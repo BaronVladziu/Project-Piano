@@ -19,6 +19,8 @@ class Biquad:
         self.y1 = 0.0
         self.y2 = 0.0
 
+        self.buffor = np.array([0.0, 0.0])
+
     def check_stability(self):
         if self.a1*self.a1 - 4*self.a2 >= 0:
             raise AttributeError("ERROR: Biquad filter is not stable!")
@@ -36,6 +38,7 @@ class Biquad:
         self.a1 = a1
         self.a2 = a2
         self.check_stability()
+        self.buffor = np.array([0.0, 0.0])
 
     def randomize_params(self):
         if_stable = False
@@ -54,7 +57,7 @@ class Biquad:
         self.K = 1/(np.abs(self.b0) + np.abs(self.b1) + np.abs(self.b2) + np.abs(self.a1) + np.abs(self.a2))
 
     def filter(self, signal:"numpy.array") -> "numpy.array":
-        signal = np.concatenate([signal, [0.0, 0.0]])
+        signal = np.concatenate([self.buffor, signal])
         output = np.zeros(signal.size)
         for i in range(signal.size):
             self.x2 = self.x1
@@ -64,4 +67,5 @@ class Biquad:
             self.y1 = self.y0
             self.y0 = self.K*(self.b0*self.x0 + self.b1*self.x1 + self.b2*self.x2 - self.a1*self.y1 - self.a2*self.y2)
             output[i] = self.y0
-        return output
+        self.buffor = output[-2:]
+        return output[:-2]
